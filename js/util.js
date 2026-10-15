@@ -11,24 +11,26 @@
     repo = seg && !seg.endsWith(".html") ? seg : location.hostname;
   }
 
-  // Fast path: manifest.json (same site, no GitHub limits). It is rebuilt automatically whenever files are pushed.
+  // manifest.json = backup list of files (rebuilt by GitHub on every push). Used only if GitHub's live list cannot be read.
   let manifest;
   const loadManifest = () => manifest || (manifest = fetch("manifest.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : {}).catch(() => ({})));
 
   async function list(path) {
-    try {
-      const m = await loadManifest(), a = m && m[path];
-      if (Array.isArray(a) && a.length) return a.filter(n => !n.startsWith("_"));
-    } catch (e) {}
     const key = "ssirc:" + path;
-    try { const c = JSON.parse(sessionStorage.getItem(key)); if (c && Date.now() - c.t < 3e5) return c.d; } catch (e) {}
-    try {
+    try { const c = JSON.parse(sessionStorage.getItem(key)); if (c && Date.now() - c.t < 6e4) return c.d; } catch (e) {}
+    try {   // 1) live list from GitHub (always up to date)
       const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}` + (branch ? "?ref=" + branch : ""));
-      if (!r.ok) return [];
-      const d = (await r.json()).filter(f => f.type === "file" && !f.name.startsWith("_")).map(f => f.name);
-      try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d })); } catch (e) {}
-      return d;
-    } catch (e) { return []; }
+      if (r.ok) {
+        const d = (await r.json()).filter(f => f.type === "file" && !f.name.startsWith("_")).map(f => f.name);
+        try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d })); } catch (e) {}
+        return d;
+      }
+    } catch (e) {}
+    try {   // 2) backup list (if GitHub is blocked or rate-limited)
+      const m = await loadManifest(), a = m && m[path];
+      if (Array.isArray(a)) return a.filter(n => !n.startsWith("_"));
+    } catch (e) {}
+    return [];
   }
   const base = n => n.replace(/\.[^.]+$/, "");
   const pretty = n => { const s = base(n).replace(/[-_]+/g, " ").trim(); return s.charAt(0).toUpperCase() + s.slice(1); };
