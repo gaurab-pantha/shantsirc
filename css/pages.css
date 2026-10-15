@@ -154,7 +154,7 @@
 .evm-close:hover{border-color:var(--teal)}
 #lb figure{max-width:90vw;text-align:center;color:#fff}
 #lb img{max-width:90vw;max-height:78vh;border-radius:10px}
-#lb figcaption{margin-top:.8rem;font-weight:500}
+#lb figcaption{margin-top:.8rem;font-weight:500;max-width:min(92vw,720px);margin-inline:auto;text-align:center}#lb figcaption strong{display:block;font-weight:600}#lb figcaption span{display:block;margin-top:.25rem;font-weight:400;font-size:.9rem;opacity:.85}
 .x,.nv{position:fixed;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:99px;cursor:pointer;font:500 1rem var(--b);z-index:3}
 .x{top:calc(1rem + env(safe-area-inset-top,0px));right:1rem;padding:.55rem 1.2rem}
 .nv{top:50%;transform:translateY(-50%);width:48px;height:48px;font-size:2rem;line-height:1}
