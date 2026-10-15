@@ -11,7 +11,15 @@
     repo = seg && !seg.endsWith(".html") ? seg : location.hostname;
   }
 
+  // Fast path: manifest.json (same site, no GitHub limits). It is rebuilt automatically whenever files are pushed.
+  let manifest;
+  const loadManifest = () => manifest || (manifest = fetch("manifest.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : {}).catch(() => ({})));
+
   async function list(path) {
+    try {
+      const m = await loadManifest(), a = m && m[path];
+      if (Array.isArray(a) && a.length) return a.filter(n => !n.startsWith("_"));
+    } catch (e) {}
     const key = "ssirc:" + path;
     try { const c = JSON.parse(sessionStorage.getItem(key)); if (c && Date.now() - c.t < 3e5) return c.d; } catch (e) {}
     try {
